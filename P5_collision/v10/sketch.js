@@ -31,6 +31,9 @@ function draw()
     posts[i].display();
     posts[i].collision(userPos, userSize);
     posts[i].isDead();
+    if(this.interaction == true){
+      posts[i].selection();
+    }
 
   }  
   //console.log(millis());
@@ -84,6 +87,12 @@ function keyPressed() {
     users++;
     newComment();
   }
+
+  if(key === 32 && this.isTouching == true){ //initiate interaction with a post
+    this.pauseTime = millis();
+    console.log('pauseTime: ' + this.pauseTime);
+    this.interaction = true;
+  }
 }
 
 
@@ -94,9 +103,12 @@ function keyReleased() {
 // car constructor
 function Post(position, start)
 {
-  this.startTime = start;
-  this.lifeTime = 10000;
+  this.startTime = start; //the time at which the post was created
+  this.lifeTime = 60000; //lifetime of the post
+  this.scale = 100; //starting size of the post bubble
   console.log('startTime: ' + this.startTime);
+  this.s = 0;
+  this.legibleScale = 255;
   
   this.xpos = position;
   this.ypos = position;
@@ -128,14 +140,24 @@ Post.prototype.move = function()
 // display method
 Post.prototype.display = function()
 {
-  this.s = 100 - this.timePassed; // 10 pixel decrease for every 1000 miliseconds that pass. 10,000 milisecond lifeTime means 100px size.
-  
+    
+    // if(this.isTouching == true){
+    //   if (this.s < this.legibleScale){
+    //     this.s++
+    //     console.log(this.s);
+    //   }
+    // } else if (this.isTouching == false){
+    //   this.s = scale - this.timePassed; // 10 pixel decrease for every 1000 miliseconds that pass. 10,000 milisecond lifeTime means 100px size.
+    //   //console.log(this.timePassed);
+    //   console.log(this.s);
+    // }
 
-  console.log(this.timePassed);
-  noStroke();
-  fill(this.c);
-
+    this.s = scale - this.timePassed;
+    
+    noStroke();
+    fill(this.c);
     ellipse(this.xpos, this.ypos, this.s, this.s)
+ 
 
 }
 
@@ -145,20 +167,19 @@ Post.prototype.isDead = function() {
 
   //reduce the size of the post as time passes
 
-  
+ //if collision is detected, ignore all code below.
+    if (millis() < this.startTime + this.lifeTime){
+      //the post has died, remove it.
+      this.dead = 0;
+      //console.log('startTime + lifeTime = ' + this.startTime + this.lifeTime);
+      this.timePassed = (millis() - this.startTime)/scale; //slowly reduce the size of the comment bubble. divide by 100 to scale. 
+      console.log(this.timePassed);
+      //console.log('a post has died');
+    } else if (millis() > this.startTime + this.lifeTime){
+      console.log('a post has died');
+      this.dead = 1;
+    }
 
-  if (millis() < this.startTime + this.lifeTime){
-    //the post has died, remove it.
-    this.dead = 0;
-    //console.log('startTime + lifeTime = ' + this.startTime + this.lifeTime);
-    this.timePassed = (millis() - this.startTime)/100;
-    console.log(this.timePassed);
-    //console.log('a post has died');
-  } else if (millis() > this.startTime + this.lifeTime){
-    console.log('a post has died');
-    this.dead = 1;
-  }
-  
   //console.log('startTime: ' + this.startTime);
 
 }
@@ -169,12 +190,18 @@ Post.prototype.collision = function(userposition,usersize) {
   distance = dist(this.xpos, this.ypos, userposition, userposition);
   //console.log(distance);
   if(distance <= usersize){ //user collision
+    this.isTouching = true;
+    console.log(this.isTouching);
     originalColor = this.c;
     //print('originalColor' + originalColor);
     this.c = color(255,0,0);
+    //this.pauseTime = millis(); //capture the beginning time of interaction
     //console.log('collision!');
-  } else {
+  } else { //no collision detected
     this.c = color(0,0,255);
+    this.isTouching = false;
+    console.log(this.isTouching);
+    this.interaction = false;
   }
 
   // for (var i = 0; i < posts.length; i++){ //Post collision. broken, needs fixing.
@@ -193,6 +220,20 @@ Post.prototype.collision = function(userposition,usersize) {
 }
 
 Post.prototype.selection = function(){
+  //selection logic
+  //when the user is hovering over a post, scale to a readable size.
+  //if they press spacebar, it means they want to begin an interaction.
+  //initiate the timer logic.
+  
+  //timer logic 
+  //millis() - current time
+  //timePassed - the time that has passed since the post was created (calulcated with: millis() - startTime)
+  //lifetime - the lifetime of the post (fixed)
+  //when an interaction occurs, pause the clock until the interaction is finished. 
+  //time the durration of the interaction, make the post a legible size, stop it from decreasing.
+  //when the interaction ends, subtract the duration of the interaction from timePassed.
+  
+
 
 }
 
