@@ -1,3 +1,5 @@
+//if serialport fails to communicate with the arduino, use this sketch.
+
 var bodyParser = require('body-parser');
 var express = require("express");
 var app = express();//create instance of express
@@ -7,7 +9,7 @@ var server = app.listen(port);
 var io = require("socket.io").listen(server);//socket io listen on port
 var serialport = require("serialport");//serial port instance
 var SerialPort = serialport.SerialPort;
-var sport = new SerialPort("/dev/ttyAMA0", { // create SerialPort instance called sport
+var sport = new SerialPort("/dev/cu.usbmodem1411", { // create SerialPort instance called sport
   baudrate: 9600,// give baudrate
   parser: serialport.parsers.readline("\n") //parse data when end of line present
 }, false);
@@ -15,20 +17,19 @@ var sport = new SerialPort("/dev/ttyAMA0", { // create SerialPort instance calle
 var buttonData;
 
 
+
 app.use(express.static(__dirname + '/'));//serve diectory this file is in
 console.log('Simple static server listening at '+url+':'+port);
+sport.open(function(error) {//open serial connection. Serial connection must open up before socket.io is opened.
+	if (error) {
+	    console.log('failed to open: ' + error);//if serial fails
+	} else {
+		// port.write("A");
+		console.log('Serial open');
+		//socket.io stuff
+		io.sockets.on('connection', function (socket) {//open io connection
 
-//socket.io stuff
-io.sockets.on('connection', function (socket) {//open io connection
-	sport.open(function(error) {//open serial connection
-		if (error) {
-	    	console.log('failed to open: ' + error);//if serial fails
-		} else {
-		    // port.write("A");
-		    console.log('Serial open');
-
-
-			sport.on("data", function (data) {
+			sport.on("data", function (data) { //fails to read serial data when inside socket.io
 		  		console.log(data);
 		  		//http://stackoverflow.com/questions/2858121/convert-comma-separated-string-to-array
 		  		var string = data;
@@ -42,16 +43,13 @@ io.sockets.on('connection', function (socket) {//open io connection
 		  		downButton = temp[1];
 		  		leftButton = temp[2];
 		  		rightButton = temp[3];
-		  		postButton = temp[4];
 		  		//console.log('up button: ' + temp[0]);
-		  		socket.emit('controller', {up: upButton, down: downButton, left: leftButton, right: rightButton, post: postButton});
+		  		socket.emit('controller', {up: upButton, down: downButton, left: leftButton, right: rightButton});
 
 			});
-		}	
-	});
 
+			console.log('socket connection established');
 
-	console.log('socket connection established');
-
-
+		});
+	}
 });

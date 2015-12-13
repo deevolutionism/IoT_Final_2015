@@ -24,7 +24,7 @@
 	<script type="text/javascript">
 		
 		var socket;
-		var url = '192.168.1.12';
+		var url = '149.31.195.46';
 		var port = 8000;
 		var commentText;
 		var upButton,downButton,leftButton,rightButton, postButton;
@@ -32,7 +32,7 @@
 		socket = io.connect(url + ':' + port);
 
 		socket.on('controller', function (data){
-			console.log(data.up);
+			//console.log(data);
 			upButton = data.up;
 			downButton = data.down;
 			leftButton = data.left;

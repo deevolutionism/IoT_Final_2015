@@ -7,7 +7,7 @@ var server = app.listen(port);
 var io = require("socket.io").listen(server);//socket io listen on port
 var serialport = require("serialport");//serial port instance
 var SerialPort = serialport.SerialPort;
-var sport = new SerialPort("/dev/ttyAMA0", { // create SerialPort instance called sport
+var sport = new SerialPort("/dev/cu.usbmodem1411", { // create SerialPort instance called sport
   baudrate: 9600,// give baudrate
   parser: serialport.parsers.readline("\n") //parse data when end of line present
 }, false);
@@ -43,7 +43,6 @@ io.sockets.on('connection', function (socket) {//open io connection
 		  		leftButton = temp[2];
 		  		rightButton = temp[3];
 		  		postButton = temp[4];
-		  		//console.log('up button: ' + temp[0]);
 		  		socket.emit('controller', {up: upButton, down: downButton, left: leftButton, right: rightButton, post: postButton});
 
 			});

@@ -1,15 +1,16 @@
 var posts = [];
 var distance = [];
 var users = 0;
-var userPosx = displayWidth/2;
-var userPosy = displayHeight/2;
+var userPosx;
+var userPosy;
 var userSize = 50;
 var vel = 1;
 var move;
 var distance, distance1;
 var startTime;
 var lifeSpan = 50; //10 second lifetime
-
+var minutes = 1;
+var createNewComment = false;
 
 var _xpos, _ypos;
       
@@ -35,6 +36,7 @@ function draw()
     posts[i].collision(userPosx,userPosy, userSize);
     posts[i].isDead();
     posts[i].selection();
+    posts[i].comment();
   }  
   //console.log(millis());
   strokeWeight(2);  
@@ -45,6 +47,8 @@ function draw()
 
 
 function user() {
+  userPosx = windowWidth/2;
+  userPosy = windowHeight/2;
   fill(200,0,200,200);
   strokeWeight(2);
   ellipse(userPosx,userPosy,userSize,userSize);
@@ -52,16 +56,18 @@ function user() {
   //console.log(distance1);
 }
 
-function newComment() {
+function newPost() {
   for (var i = users - 1; i < users; i++)
   {
     //console.log('i: ' + i + ', Users: ' + users);
     startTime = millis();
-    posts[i] = new Post(userPosx,userPosy, startTime, i);
+    posts[i] = new Post(userPosx,userPosy, startTime, i); //add a new post to the end of the array
     //console.log('posts length: ' + posts.length);
 
   }
 }
+
+
 
 
  
@@ -79,8 +85,13 @@ function keyPressed() {
   }
 
   if (keyCode === ENTER){
-    users++;
-    newComment();
+    if(createNewComment == false){
+      users++;
+      newPost();
+    } else {
+      createNewComment = true;
+    }
+    
   }
 }
 
@@ -103,17 +114,17 @@ function controller(){
   }
   if (postButton == 1){
     users++;
-    newComment();
+    newPost();
   }
 }
 
-// car constructor
-function Post(positionx,positiony, start, ID)
+//post constructor
+function Post(positionx, positiony, start, ID)
 {
   this.identity = int(ID);
   console.log('this posts ID: ' + ID);
   this.startTime = start;
-  this.lifeTime = 60000 * 10; //60 minute lifetime
+  this.lifeTime = 60000 * minutes; //60 minute lifetime
   console.log('startTime: ' + this.startTime);
   
   this.xpos = positionx;
@@ -130,8 +141,14 @@ function Post(positionx,positiony, start, ID)
   this.proximity = 150;
   this.sw = 1;
   this.legibleSize = 100;
+  this.selected = false;
+  this.sx = positionx;
+  this.sy = positiony;
+
 
   this.newBubble = true;
+  this.placeNewComment = false;
+  this.createNewComment = false;
 }
  
 // drive method
@@ -165,14 +182,14 @@ Post.prototype.display = function()
 
   if(this.selectionMode == 1){//increase to legible size
       ellipse(this.xpos, this.ypos, this.legibleSize, this.legibleSize);
-    }
-  } else if(this.selectionMode == 0){
+    } else if (this.selectionMode == 0){
     ellipse(this.xpos, this.ypos, this.postSize, this.postSize);
   }
-
-  fill(this.tFill);
-  textSize(36-int(this.tSize));
-  text(this.mes, this.xpos, this.ypos, 300, 300);
+  if(this.dead == 0){
+    fill(this.tFill);
+    textSize(36-int(this.tSize));
+    text(this.mes, this.xpos, this.ypos, 300, 300);
+  }
 }
 
 Post.prototype.isDead = function() {
@@ -183,6 +200,7 @@ Post.prototype.isDead = function() {
     this.timePassed = millis() - this.startTime;
     //map(value, value low, value high, target low, target high)
     this.m = map(this.timePassed, 0, this.lifeTime, 0, this.s);//
+    //console.log(this.m);
     this.tSize = map(this.timePassed, 0, this.lifeTime, 0, 24);
       //console.log('time passed since post was created: ' + this.timePassed);
       //console.log('mapped value: ' +this.m);
@@ -191,8 +209,6 @@ Post.prototype.isDead = function() {
   } else if (millis() > this.startTime + this.lifeTime){ //the post has died.
     console.log('Post ' + this.identity + ' has died');
     this.dead = 1;
-
-
   }
 
 }
@@ -210,7 +226,7 @@ Post.prototype.collision = function(userpositionx, userpositiony,usersize) {
 
     //console.log('collision!');
   } else {
-    this.c = color(0,0,255);
+    this.c = color(255,255,255);
     this.selectionMode = 0;
   }
 
@@ -221,8 +237,8 @@ Post.prototype.selection = function(){//user has selected a post to interact wit
   //when a user hovers over a post, the size increases to a legible size
   //if the user presses a key, they enter selection mode and may add a comment.
   if(this.selectionMode == 1){
-    console.log('selectionSize: ' + this.selectionSize);
-    console.log('postSize: ' + this.postSize);
+    //console.log('selectionSize: ' + this.selectionSize);
+    //console.log('postSize: ' + this.postSize);
     //increase the size
 
     
@@ -234,12 +250,15 @@ Post.prototype.selection = function(){//user has selected a post to interact wit
     stroke(0,255,0);
     strokeWeight(this.sw);
     ellipse(this.xpos, this.ypos, this.selectionSize, this.selectionSize);
-    if(this.selectionSize > this.postSize){
-      this.proximity--;
-      this.sw = map(this.proximity, 150, 30, 0, 10);
-      console.log('stroke weight: ' + this.sw);
-      if(this.selectionSize <= this.postSize){
-        console.log('selected!');
+    if(this.selectionSize >= this.postSize){
+      this.proximity--; //decreas the siez of the stroke ring as selection time increases
+      this.sw = map(this.proximity, 150, 30, 0, 10); //stroke weight of selection ring
+      //console.log('stroke weight: ' + this.sw);
+      console.log('selectionSize: ' + this.selectionSize + " postSize: " + this.postSize);
+      if(this.selectionSize <= this.postSize){ //if the selection ring is smaller than the size of the post, it is selected.
+        this.selected = true; 
+        this.placeNewComment = true;
+        console.log(this.selected);
       }
     }
   } else {
@@ -250,8 +269,8 @@ Post.prototype.selection = function(){//user has selected a post to interact wit
 Post.prototype.userInput = function(message) {
   if(this.newBubble == true){
     
-      this.message = prompt('Please type up to 144 characters');
-      console.log(this.message.length);
+      this.message = prompt('Please type up to 144 characters for your post');
+      //console.log(this.message.length);
       if (this.message.length > 144){
         this.message = prompt('You used too many characters, please try again');
       }
@@ -262,14 +281,71 @@ Post.prototype.userInput = function(message) {
       this.startTime = millis();
       console.log('new startTime = ' + this.startTime);
       this.newBubble = false;
-    }
+  }
 }
 
 Post.prototype.comment = function() {//users can add comments to existing posts
-  //adding a comment with attach a new bubble to the perimeter
+  //adding a comment will attach a new bubble to the perimeter
   //adding a new comment will also increase the lifetime of the post
 
+
+  //logic: when user hovers over a post/comment for over 5 seconds, prompt them to place a new comment bubble somewhere. Once they have placed it, prompt them to write.
+
+  if (this.placeNewComment == true && this.dead == false){ //create a temorary cirlce to represent a new comment to be placed
+    //constructor + attributes
+    fill(100,100,100);
+    console.log('sx: ' + this.sx);
+    this.sx = lerp(userPosx, this.xpos, 0.01);
+    this.sy = lerp(userPosy, this.ypos, 0.01);
+    ellipse(this.sx, this.sy, 80, 80);
+    stroke(255);
+    strokeWeight(2);
+    line(userPosx, userPosy, this.xpos, this.ypos);
+    noStroke();
+    fill(200);
+    textSize(12);
+    text("drop your comment somewhere", userPosx, userPosy, 300, 300);
+  }
+
+  if(createNewComment == true){ //add a new comment to the comment array. 
+    this.placeNewComment = false;
+
+    this.cx = userPosx;
+    this.cy = userPosy;
+    this.cSize = 50;
+    strokeWeight(2);
+    stroke(50);
+    
+    // noStroke();
+    // fill(0,255,0);
+    // ellipse(this.cx, this.cy, this.cSize, this.cSize);
+
+
+    // this.message = prompt('you have 144 characters to type your comment');
+    //   //console.log(this.message.length);
+    //   if (this.message.length > 144){
+    //     this.message = prompt('You used too many characters, please try again');
+    //   }
+    //   this.mes = this.message;
+      
+    //   //this.delayDuration = millis() - this.delayBegin;
+    //   //console.log('delayed startTime by: ' + this.delayDuration + ' milliseconds');
+      
+    //   noStroke();
+    //   fill(200);
+    //   textSize(12);
+    //   text(this.mes, this.cx, this.cy, 300,300);
+
+
+
+    //   createNewComment = false;
+  }
+
+
 }
+
+
+
 
 
 
