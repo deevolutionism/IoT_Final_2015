@@ -2,7 +2,7 @@
 <html>
 <head>
 	<meta charset="UTF-8">
-	<title>Version_14</title>
+	<title>Version_15</title>
 	<script src="libraries/p5.js" type="text/javascript"></script>
     <script src="libraries/p5.dom.js" type="text/javascript"></script>
     <script src="libraries/p5.sound.js" type="text/javascript"></script>
@@ -47,6 +47,11 @@
 			return message;
 		}
 
+		addEventListener("click", function() {
+   			var el = document.documentElement
+    		, rfs = el.requestFullScreen || el.webkitRequestFullScreen || el.mozRequestFullScreen;
+    		rfs.call(el);
+		});
 
 
 

@@ -47,6 +47,12 @@ function draw()
   strokeWeight(2);  
   user(); 
   controller();
+  textSize(14);
+  text('ENTER: make a new post', 20, 20);
+  text('ESCAPE: cancel post', 20, 40);
+  text('CONTROLLER: navigate the universe of comments', 20, 60);
+
+
 }
   
 
@@ -139,6 +145,7 @@ function Post(positionx, positiony, start, ID, isconnected, conx, cony)
   this.mes = 'placeholder text';
   this.tFill = 100;
   this.ts = 32;
+  this.maxtSize = 36;
 
   this.selectionMode = 0;
   this.selectionSize = this.postSize + 30;
@@ -322,6 +329,8 @@ Post.prototype.comment = function() {//users can add comments to existing posts
     isConnected = true;
     connectedX = this.xpos;
     connectedY = this.ypos;
+
+    this.startTime = millis(); //reset startTime for the current post if a new comment is being connected to it
 
     fill(100,100,100);
     ellipse(userPosx,userPosy, 80, 80);

@@ -339,6 +339,7 @@ Post.prototype.comment = function() {//users can add comments to existing posts
     this.placeNewComment = false;
     placingNewComment = false;
     console.log('selection haulted');
+    
   }
 }
 
@@ -348,6 +349,12 @@ Post.prototype.drawLine = function(){
   if(this.dead == 0){
   //console.log('ID: '+ this.identity + 'connectedX:' + this.conx + 'xpos: ' + this.xpos);
     line(this.xpos, this.ypos, this.conx, this.cony); //draw connecting line
+  }
+}
+
+Post.prototype.resetTime = function() {
+  if(placingNewComment = true){
+    this.startTime = millis(); //reset the post's clock
   }
 }
 
